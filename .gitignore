@@ -1,0 +1,8 @@
+# Configs
+config/config.yaml
+
+# Database
+storage/storage.db
+
+# Other
+.vscode/
