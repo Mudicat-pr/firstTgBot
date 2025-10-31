@@ -1,7 +1,6 @@
 package upd
 
 import (
-	"fmt"
 	"log"
 
 	h "github.com/Mudicat-pr/firstTgBot/internal/handlers"
@@ -12,6 +11,31 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+const UserHelper = `Я могу помочь вам  выбрать интересующий вас тариф нашего сотового оператора, и оставить заявку по подключению!
+
+/all - Список всех доступных тарифных планов.
+/details - Открыть описание интересующего вас тарифа.
+/submit - Оставить заявку на подключение тарифного плана.
+/cancel - Отменить действие.
+
+Я ещё молодой бот, возможно список доступных команд будет расширяться. Если я вам буду нужен - просто напишите любое сообщение в чат☺️`
+
+const AdminHelper = `Дорогой администратор, вот все доступные команды:
+
+Пользовательские (общие):
+/all - Список всех доступных тарифных планов.
+/details - Открыть описание интересующего вас тарифа.
+/submit - Оставить заявку на подключение тарифного плана.
+/cancel - Отменить действие.
+
+Команды для управления (доступны только администраторам):
+/add - Добавить новый тарифный план.
+/del - Удалить тарифный план. ‼️ВНИМАНИЕ‼: Удаленный тарифный план не подлежит восстановлению.
+/hide - Спрятать тарифный план. Спрятанный тарифный план невидим для списка /all у пользователя.
+/all_hidden - Просмотреть все скрытые тарифные планы.
+/edit - Изменить тарифный план.
+`
+
 func UpdateTg(bot *tgbotapi.BotAPI,
 	updates tgbotapi.UpdatesChannel,
 	s *storage.Storage,
@@ -19,71 +43,37 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 	a *admin.AdminHandle,
 	u *user.UserHandle) {
 
+	r := New(bot, f, h.IsAdmin) // Роутер
+
 	for update := range updates {
 		if update.Message == nil {
 			continue
 		}
-		administrator := h.IsAdmin(update.Message)
-		if f.State(update.Message.From.ID) != "" {
-			f.Handle(update.Message)
+		msg := update.Message
+
+		if state := f.State(msg.From.ID); state != "" {
+			f.Handle(msg)
 			continue
 		}
 
-		if update.Message != nil {
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-			text := update.Message.Text
-
-			switch text {
-			case "/all":
-				u.All(update.Message, h.FlagTrue)
-			case "/details":
-				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите ID тарифа для просмотра полного описания"))
-				f.SetState(update.Message.From.ID, tools.DetailsTariff)
-			case "/add":
-				if !administrator {
-					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, h.UnknownCommand))
-					continue
-				}
-				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Введите значение в следующем виде: ИМЯ; ОПИСАНИЕ; ЦЕНА (цена только целым числом)"))
-				f.SetState(update.Message.From.ID, tools.AddTariff)
-			case "/del":
-				if !administrator {
-					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, h.UnknownCommand))
-					continue
-				}
-				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Введите ID удаляемого тарифа"))
-				f.SetState(update.Message.From.ID, tools.DelTariff)
-			case "/hide":
-				if !administrator {
-					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, h.UnknownCommand))
-					continue
-				}
-				msg := fmt.Sprintf(`Выберите тариф по его ID и далее %s или %s. Например: 1; %s`,
-					h.IsHidden, h.IsOpened, h.IsHidden)
-				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, msg))
-				f.SetState(update.Message.From.ID, tools.HideByTariffID)
-			case "/all_hidden":
-				if !administrator {
-					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, h.UnknownCommand))
-					continue
-				}
-				u.All(update.Message, h.FlagFalse)
-			case "/edit":
-				if !administrator {
-					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, h.UnknownCommand))
-					continue
-				}
-				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Введите текст следующим образом: ID; ИМЯ; ОПИСАНИЕ; ЦЕНА"))
-				f.SetState(update.Message.From.ID, tools.EditTariff)
-			case "/sub":
-				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, `
-Оставьте заявку в следующем виде, где данные вводятся черезз точку с запятой:
-Имя тарифа; ФИО; Адрес проживания; Электронная почта; Номер телефона`))
-				f.SetState(update.Message.From.ID, tools.SubmitAppeal)
-			default:
-				bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, h.UnknownCommand))
-			}
-		}
+		r.Register(Command{
+			Name: "/all",
+			Handle: func(msg *tgbotapi.Message) {
+				u.All(msg, h.FlagTrue)
+			},
+		})
+		r.Register(Command{
+			Name:   "/details",
+			State:  tools.DetailsTariff,
+			Prompt: PromptDetailsTariff,
+		})
+		r.Register(Command{
+			Name:   "/submit",
+			State:  tools.SubmitAppeal,
+			Prompt: PromptSubmitTariff,
+		})
+		log.Printf("[%s] %s", msg.From.UserName, msg.Text)
+		r.Handle(msg)
 	}
 }
 
