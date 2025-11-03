@@ -59,7 +59,7 @@ func (r *CommandRouter) Handle(msg *tgbotapi.Message) {
 	isAdmin := h.IsAdmin(msg)
 
 	response := tgbotapi.NewMessage(msg.Chat.ID, cmd.Prompt)
-	response.ParseMode = "HTML"
+	response.ParseMode = tgbotapi.ModeHTML
 	// Отправка help-сообщения в ответ на неизвестную команду или сообщение
 	if !ok {
 		text := UserHelper

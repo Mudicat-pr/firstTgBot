@@ -2,7 +2,6 @@ package user
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/Mudicat-pr/firstTgBot/pkg/e"
@@ -23,14 +22,11 @@ func (t *UserHandle) All(msg *tgbotapi.Message, flag bool) (err error) {
 	rows, err := t.TariffDB.AllTariffs()
 
 	if err != nil {
-		h.MsgForUser(*t.Bot, msg.Chat.ID, h.EmptyTariffList)
+		h.MsgForUser(*t.Bot, msg.Chat.ID, "На данный момент тарифов нет или они находятся в разработке")
 		return err
 	}
-	_, err = t.Bot.Send(tgbotapi.NewMessage(
-		msg.Chat.ID,
-		buildRows(rows, flag),
-	))
-	return err
+	h.MsgForUser(*t.Bot, msg.Chat.ID, buildRows(rows, flag))
+	return nil
 }
 
 func buildRows(rows []storage.Tariff, flag bool) string {
@@ -47,11 +43,11 @@ func buildRows(rows []storage.Tariff, flag bool) string {
 	var header string
 	switch flag {
 	case h.FlagTrue:
-		header = "Все текущие тарифы: \n\n"
+		header = "<b>Все текущие тарифы:</b>\n\n"
 	case h.FlagFalse:
-		header = "Все скрытые тарифы: \n\n"
+		header = "<b>Все скрытые тарифы:</b> \n\n"
 	}
-	footer := "Если желаете узнать подробнее - пишите в чат /details"
+	footer := "<i>Если желаете узнать подробнее - пишите в чат /details</i>"
 	return header + message.String() + "\n" + footer
 }
 
@@ -59,15 +55,15 @@ func buildRows(rows []storage.Tariff, flag bool) string {
 func (t *UserHandle) Detail(msg *tgbotapi.Message) (err error) {
 	defer func() { err = e.WrapIfErr("Can't select tariff for view details", err) }()
 
-	tariffID, err := msgToInt(msg.Text)
+	tariffID, err := h.MsgToInt(msg.Text)
 	if err != nil {
-		h.MsgForUser(*t.Bot, msg.Chat.ID, h.NoFoundTariff)
+		h.MsgForUser(*t.Bot, msg.Chat.ID, "Тарифа с таким ID не существует или он не доступен в данный момент")
 		return err
 	}
 	row, err := t.TariffDB.Details(tariffID)
 	if row.IsHide == h.FlagTrue {
 		t.F.ClearState(msg.From.ID)
-		h.MsgForUser(*t.Bot, msg.Chat.ID, h.NoFoundTariff)
+		h.MsgForUser(*t.Bot, msg.Chat.ID, "Тарифа с таким ID не существует или он не доступен в данный момент")
 		return err
 	}
 	header := fmt.Sprintf("Вы выбрали тариф %d - %s: \n", row.ID, row.Title)
@@ -76,9 +72,4 @@ func (t *UserHandle) Detail(msg *tgbotapi.Message) (err error) {
 	h.MsgForUser(*t.Bot, msg.Chat.ID, header+body)
 	defer t.F.ClearState(msg.From.ID)
 	return err
-}
-
-func msgToInt(msg string) (res int, err error) {
-	res, err = strconv.Atoi(msg)
-	return res, err
 }

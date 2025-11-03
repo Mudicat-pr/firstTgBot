@@ -51,6 +51,12 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 		}
 		msg := update.Message
 
+		if msg.Text == "/cancel" {
+
+			f.ClearState(msg.From.ID)
+			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Операция успешно отменена!"))
+		}
+
 		if state := f.State(msg.From.ID); state != "" {
 			f.Handle(msg)
 			continue
@@ -65,12 +71,37 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 		r.Register(Command{
 			Name:   "/details",
 			State:  tools.DetailsTariff,
-			Prompt: PromptDetailsTariff,
+			Prompt: PromptDetailsTariff + CancelMessage,
 		})
 		r.Register(Command{
 			Name:   "/submit",
 			State:  tools.SubmitAppeal,
-			Prompt: PromptSubmitTariff,
+			Prompt: PromptSubmitTariff + CancelMessage,
+		})
+		r.Register(Command{
+			Name:      "/add",
+			AdminOnly: h.FlagTrue,
+			State:     tools.AddTariff,
+			Prompt:    PromptAddTariff + CancelMessage,
+		})
+		r.Register(Command{
+			Name:      "/edit",
+			AdminOnly: h.FlagTrue,
+			State:     tools.DelTariff,
+			Prompt:    PromptDelTariff + CancelMessage,
+		})
+		r.Register(Command{
+			Name:      "/edit",
+			AdminOnly: h.FlagTrue,
+			State:     tools.HideByTariffID,
+			Prompt:    PromptHideTariff + CancelMessage,
+		})
+		r.Register(Command{
+			Name:      "/all_hidden",
+			AdminOnly: h.FlagTrue,
+			Handle: func(msg *tgbotapi.Message) {
+				u.All(msg, h.FlagFalse)
+			},
 		})
 		log.Printf("[%s] %s", msg.From.UserName, msg.Text)
 		r.Handle(msg)

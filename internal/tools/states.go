@@ -9,11 +9,5 @@ const (
 	SubmitAppeal   = "submit_appeal"
 
 	// Константы для редактирования договора. Сигнатура a_ от сокращения appeal
-	EditWait     = "waiting_edit_a"
-	EditAll      = "a_edit_all"
-	EditEmail    = "a_edit_email"
-	EditPhone    = "a_edit_phone"
-	EditFullname = "a_edit_fullname"
-	EditAddress  = "a_edit_address"
-	EditTariff   = "a_edit_tariff"
+	EditTariff = "a_edit_tariff"
 )

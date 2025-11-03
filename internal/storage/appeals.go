@@ -13,14 +13,6 @@ type AppealManager interface {
 	DetailViewer
 }
 
-func (a *AppealHandle) Details(userID int64) (bool, error) {
-	data, err := a.S.db.Query("SELECT id_user FROM appeals WHERE id_user = ?")
-	if err != nil || data == nil {
-		return false, err
-	}
-	return true, nil
-}
-
 func (a *AppealHandle) Add(tariffName string, userID int64, contract int, fullname, address, email, phone string) (err error) {
 	defer func() { err = e.WrapIfErr("Can't insert data to appeals", err) }()
 
@@ -35,6 +27,25 @@ func (a *AppealHandle) Add(tariffName string, userID int64, contract int, fullna
 	}
 
 	return nil
+}
+
+func (a *AppealHandle) Details(userID, contractID int) (d Appeal, err error) {
+	defer func() { err = e.WrapIfErr("Failed to select appeal data", err) }()
+	ctx, cancel := e.Ctx()
+	defer cancel()
+	var ap Appeal
+	q := `SELECT tariff_name, contract, fullname, address, email, phone, status FROM appeals WHERE id_user = ? AND contract = ?`
+	err = a.S.db.QueryRowContext(ctx, q, userID, contractID).
+		Scan(&ap.TariffName,
+			&ap.Contract,
+			&ap.AppealData.FullName,
+			&ap.AppealData.Address,
+			&ap.AppealData.Email,
+			&ap.AppealData.Phone)
+	if err != nil {
+		return ap, err
+	}
+	return ap, nil
 }
 
 // Берет строку из FSM и в зависимости от нее дает функционал к изменению записи
