@@ -57,8 +57,8 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Операция успешно отменена!"))
 		}
 
-		if state := f.State(msg.From.ID); state != "" {
-			f.Handle(msg)
+		if state := f.UserState(msg.From.ID); state != "" {
+			f.HandleState(msg)
 			continue
 		}
 
@@ -85,13 +85,13 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 			Prompt:    PromptAddTariff + CancelMessage,
 		})
 		r.Register(Command{
-			Name:      "/edit",
+			Name:      "/del",
 			AdminOnly: h.FlagTrue,
 			State:     tools.DelTariff,
 			Prompt:    PromptDelTariff + CancelMessage,
 		})
 		r.Register(Command{
-			Name:      "/edit",
+			Name:      "/hide",
 			AdminOnly: h.FlagTrue,
 			State:     tools.HideByTariffID,
 			Prompt:    PromptHideTariff + CancelMessage,
@@ -102,6 +102,17 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 			Handle: func(msg *tgbotapi.Message) {
 				u.All(msg, h.FlagFalse)
 			},
+		})
+		r.Register(Command{
+			Name:   "/edit_appeal",
+			State:  tools.EdtiAppeal,
+			Prompt: PromptEditAppeal + CancelMessage,
+		})
+		r.Register(Command{
+			Name:      "/edit_t",
+			State:     tools.EditTariff,
+			AdminOnly: h.FlagTrue,
+			Prompt:    PromptEditTariff + CancelMessage,
 		})
 		log.Printf("[%s] %s", msg.From.UserName, msg.Text)
 		r.Handle(msg)

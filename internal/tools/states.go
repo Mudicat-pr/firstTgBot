@@ -9,5 +9,6 @@ const (
 	SubmitAppeal   = "submit_appeal"
 
 	// Константы для редактирования договора. Сигнатура a_ от сокращения appeal
-	EditTariff = "a_edit_tariff"
+	EditTariff = "edit_tariff"
+	EdtiAppeal = "edit_appeal"
 )
