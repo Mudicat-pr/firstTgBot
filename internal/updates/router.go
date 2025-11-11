@@ -1,6 +1,8 @@
 package upd
 
 import (
+	"log"
+
 	h "github.com/Mudicat-pr/firstTgBot/internal/handlers"
 	"github.com/Mudicat-pr/firstTgBot/internal/tools"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -21,7 +23,7 @@ type AdminHandle func(msg *tgbotapi.Message) bool
 type Command struct {
 	Name      string
 	AdminOnly bool
-	State     string
+	State     int
 	Prompt    string
 	Handle    TypeHandle
 }
@@ -56,6 +58,7 @@ func (r *CommandRouter) Register(cmd Command) {
 // Стандартный набор роутов для апдейтов и обработка зарегистрированных команд
 func (r *CommandRouter) Handle(msg *tgbotapi.Message) {
 	cmd, ok := r.cmds[msg.Text]
+	log.Printf("Command found: %v, state: %d", ok, cmd.State)
 	isAdmin := h.IsAdmin(msg)
 
 	response := tgbotapi.NewMessage(msg.Chat.ID, cmd.Prompt)
@@ -75,16 +78,16 @@ func (r *CommandRouter) Handle(msg *tgbotapi.Message) {
 		r.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, UserHelper))
 		return
 	}
+	if cmd.Handle != nil {
+		cmd.Handle(msg)
+	}
 
 	if cmd.Prompt != "" {
 		r.bot.Send(response)
 	}
 
-	if cmd.State != "" {
+	if cmd.State != 0 {
 		r.fsm.SetState(msg.From.ID, cmd.State)
 	}
 
-	if cmd.Handle != nil {
-		cmd.Handle(msg)
-	}
 }

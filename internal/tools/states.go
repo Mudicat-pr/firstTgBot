@@ -1,14 +1,25 @@
 package tools
 
 const (
-	AllTarrifs     = "all_tariffs"
-	AddTariff      = "add_tariffs"
-	DelTariff      = "del_tariff"
-	HideByTariffID = "hide_tariff_id"
-	DetailsTariff  = "details_tariff"
-	SubmitAppeal   = "submit_appeal"
+	AllTarrifs = 1 << iota
+
+	TariffTitle
+	TariffBody
+	TariffPrice
+	TariffAdd
+	DelTariff
+
+	// Скрытие тарифа (админка)
+	Hide
 
 	// Константы для редактирования договора. Сигнатура a_ от сокращения appeal
-	EditTariff = "edit_tariff"
-	EdtiAppeal = "edit_appeal"
+	EditTariff
+	EdtiAppeal
+
+	// Изменение тарифов
+	TariffEdit
+	TariffTitleEdit
+	TariffBodyEdit
+	TariffPriceEdit
+	TariffEditConfirm
 )

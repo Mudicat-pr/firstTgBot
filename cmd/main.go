@@ -48,13 +48,26 @@ func main() {
 
 func regState(f *tools.FSM, a *admin.AdminHandle, u *user.UserHandle) {
 	// Admin states
-	f.Register(tools.AddTariff, tools.BindState(a, (*admin.AdminHandle).Add))
+
+	f.Register(tools.TariffTitle, tools.BindState(a, (*admin.AdminHandle).SetTitle))
+	f.Register(tools.TariffBody, tools.BindState(a, (*admin.AdminHandle).SetBody))
+	f.Register(tools.TariffPrice, tools.BindState(a, (*admin.AdminHandle).SetPrice))
 	f.Register(tools.DelTariff, tools.BindState(a, (*admin.AdminHandle).Del))
-	f.Register(tools.HideByTariffID, tools.BindState(a, (*admin.AdminHandle).HideByID))
-	f.Register(tools.EditTariff, tools.BindState(a, (*admin.AdminHandle).Edit))
 
-	// User states
-	f.Register(tools.DetailsTariff, tools.BindState(u, (*user.UserHandle).Detail))
-	f.Register(tools.SubmitAppeal, tools.BindState(u, (*user.UserHandle).Add))
+	f.Register(tools.TariffEdit, tools.BindState(a, (*admin.AdminHandle).StartEdit))
+	f.Register(tools.TariffTitleEdit, tools.BindState(a, (*admin.AdminHandle).EditTitle))
+	f.Register(tools.TariffBodyEdit, tools.BindState(a, (*admin.AdminHandle).EditBody))
+	f.Register(tools.TariffPriceEdit, tools.BindState(a, (*admin.AdminHandle).EditPrice))
+	f.Register(tools.TariffEditConfirm, tools.BindState(a, (*admin.AdminHandle).EditConfirm))
 
+	f.Register(tools.Hide, tools.BindState(a, (*admin.AdminHandle).Hide))
+	/*
+		f.Register(tools.HideByTariffID, tools.BindState(a, (*admin.AdminHandle).HideByID))
+		f.Register(tools.EditTariff, tools.BindState(a, (*admin.AdminHandle).Edit))
+
+		// User states
+		f.Register(tools.DetailsTariff, tools.BindState(u, (*user.UserHandle).Detail))
+		f.Register(tools.SubmitAppeal, tools.BindState(u, (*user.UserHandle).Add))
+
+	*/
 }

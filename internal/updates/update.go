@@ -45,29 +45,13 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 
 	r := New(bot, f, h.IsAdmin) // Роутер
 
-	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
-		msg := update.Message
-
-		if msg.Text == "/cancel" {
-
-			f.ClearState(msg.From.ID)
-			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Операция успешно отменена!"))
-		}
-
-		if state := f.UserState(msg.From.ID); state != "" {
-			f.HandleState(msg)
-			continue
-		}
-
-		r.Register(Command{
-			Name: "/all",
-			Handle: func(msg *tgbotapi.Message) {
-				u.All(msg, h.FlagTrue)
-			},
-		})
+	r.Register(Command{
+		Name: "/all",
+		Handle: func(msg *tgbotapi.Message) {
+			u.All(msg, h.FlagTrue)
+		},
+	})
+	/*
 		r.Register(Command{
 			Name:   "/details",
 			State:  tools.DetailsTariff,
@@ -77,45 +61,63 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 			Name:   "/submit",
 			State:  tools.SubmitAppeal,
 			Prompt: PromptSubmitTariff + CancelMessage,
-		})
-		r.Register(Command{
-			Name:      "/add",
-			AdminOnly: h.FlagTrue,
-			State:     tools.AddTariff,
-			Prompt:    PromptAddTariff + CancelMessage,
-		})
-		r.Register(Command{
-			Name:      "/del",
-			AdminOnly: h.FlagTrue,
-			State:     tools.DelTariff,
-			Prompt:    PromptDelTariff + CancelMessage,
-		})
-		r.Register(Command{
-			Name:      "/hide",
-			AdminOnly: h.FlagTrue,
-			State:     tools.HideByTariffID,
-			Prompt:    PromptHideTariff + CancelMessage,
-		})
-		r.Register(Command{
-			Name:      "/all_hidden",
-			AdminOnly: h.FlagTrue,
-			Handle: func(msg *tgbotapi.Message) {
-				u.All(msg, h.FlagFalse)
-			},
-		})
-		r.Register(Command{
-			Name:   "/edit_appeal",
-			State:  tools.EdtiAppeal,
-			Prompt: PromptEditAppeal + CancelMessage,
-		})
-		r.Register(Command{
-			Name:      "/edit_t",
-			State:     tools.EditTariff,
-			AdminOnly: h.FlagTrue,
-			Prompt:    PromptEditTariff + CancelMessage,
-		})
+		}) */
+	r.Register(Command{
+		Name:      "/add",
+		AdminOnly: h.FlagTrue,
+		State:     tools.TariffTitle,
+		Prompt:    PromptAddTariff + CancelMessage,
+	})
+	r.Register(Command{
+		Name:      "/del",
+		AdminOnly: h.FlagTrue,
+		State:     tools.DelTariff,
+		Prompt:    PromptDelTariff + CancelMessage,
+	})
+	r.Register(Command{
+		Name:      "/hide",
+		AdminOnly: h.FlagTrue,
+		State:     tools.Hide,
+		Prompt:    PromptHideTariff + CancelMessage,
+	})
+	r.Register(Command{
+		Name:      "/all_hidden",
+		AdminOnly: h.FlagTrue,
+		Handle: func(msg *tgbotapi.Message) {
+			u.All(msg, h.FlagFalse)
+		},
+	})
+	r.Register(Command{
+		Name:   "/edit_appeal",
+		State:  tools.EdtiAppeal,
+		Prompt: PromptEditAppeal + CancelMessage,
+	})
+	r.Register(Command{
+		Name:      "/edit_t",
+		State:     tools.TariffEdit,
+		AdminOnly: h.FlagTrue,
+		Prompt:    PromptEditTariff + CancelMessage,
+	})
+	for update := range updates {
+		if update.Message == nil {
+			continue
+		}
+		msg := update.Message
+
+		if msg.Text == "/cancel" {
+			f.ClearState(msg.From.ID)
+			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Операция успешно отменена!"))
+		}
+
+		if state := f.UserState(msg.From.ID); state != 0 {
+			log.Printf("Текущий стейт: %v", state)
+			f.HandleState(msg)
+			continue
+		}
 		log.Printf("[%s] %s", msg.From.UserName, msg.Text)
+		log.Printf("Before router: user state = %d", f.UserState(msg.From.ID))
 		r.Handle(msg)
+		log.Printf("After router: user state = %d", f.UserState(msg.From.ID))
 	}
 }
 

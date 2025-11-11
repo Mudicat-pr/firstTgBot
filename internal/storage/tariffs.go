@@ -40,7 +40,7 @@ func (t *TariffHandle) AllTariffs() (tariff []Tariff, err error) {
 	return tariffs, nil
 }
 
-func (t *TariffHandle) Details(tariffID int) (tariff Tariff, err error) {
+func (t *TariffHandle) Details(tariffID int) (tariff *Tariff, err error) {
 	defer func() { err = e.WrapIfErr("Failed to select data", err) }()
 	ctx, cancel := e.Ctx()
 	defer cancel()
@@ -48,9 +48,9 @@ func (t *TariffHandle) Details(tariffID int) (tariff Tariff, err error) {
 	err = t.S.db.QueryRowContext(ctx, "SELECT id, title, body, price, is_hide FROM tariffs WHERE id = ?", tariffID).
 		Scan(&trf.ID, &trf.Title, &trf.Body, &trf.Price, &trf.IsHide)
 	if err != nil {
-		return trf, err
+		return &trf, err
 	}
-	return trf, nil
+	return &trf, nil
 }
 
 func (t *TariffHandle) Add(title, description string, price int) error {
