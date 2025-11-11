@@ -4,6 +4,7 @@ config/config.yaml
 # Database
 internal/storage/storage.db
 storage/storage.db
+*.db
 
 # Other
 .vscode/
