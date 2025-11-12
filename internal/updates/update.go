@@ -51,19 +51,19 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 			u.All(msg, h.FlagTrue)
 		},
 	})
-	/*
-		r.Register(Command{
-			Name:   "/details",
-			State:  tools.DetailsTariff,
-			Prompt: PromptDetailsTariff + CancelMessage,
-		})
-		r.Register(Command{
-			Name:   "/submit",
-			State:  tools.SubmitAppeal,
-			Prompt: PromptSubmitTariff + CancelMessage,
-		}) */
 	r.Register(Command{
-		Name:      "/add",
+		Name:   "/tariff",
+		State:  tools.TariffDetails,
+		Prompt: PromptDetailsTariff + CancelMessage,
+	})
+
+	r.Register(Command{
+		Name:   "/create",
+		State:  tools.ContractSubmit,
+		Prompt: PromptContractCreate + CancelMessage,
+	})
+	r.Register(Command{
+		Name:      "/new",
 		AdminOnly: h.FlagTrue,
 		State:     tools.TariffTitle,
 		Prompt:    PromptAddTariff + CancelMessage,
@@ -88,15 +88,32 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 		},
 	})
 	r.Register(Command{
-		Name:   "/edit_appeal",
-		State:  tools.EdtiAppeal,
-		Prompt: PromptEditAppeal + CancelMessage,
+		Name:   "/edit_contract",
+		State:  tools.ContractEdit,
+		Prompt: PromptEditContract + CancelMessage,
 	})
 	r.Register(Command{
-		Name:      "/edit_t",
+		Name:      "/edit_tariff",
 		State:     tools.TariffEdit,
 		AdminOnly: h.FlagTrue,
 		Prompt:    PromptEditTariff + CancelMessage,
+	})
+	r.Register(Command{
+		Name:   "/contract",
+		State:  tools.ContractDetails,
+		Prompt: PromptDetailsContract,
+	})
+	r.Register(Command{
+		Name:      "/del_contract",
+		State:     tools.DeleteContract,
+		AdminOnly: h.FlagTrue,
+		Prompt:    PromptDeleteContract + CancelMessage,
+	})
+	r.Register(Command{
+		Name:      "/switch",
+		State:     tools.SwitchStart,
+		AdminOnly: h.FlagTrue,
+		Prompt:    PromptSwitchStatus + CancelMessage,
 	})
 	for update := range updates {
 		if update.Message == nil {

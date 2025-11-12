@@ -16,15 +16,15 @@ type Tariff struct {
 	IsHide bool
 }
 
-type Appeal struct {
-	ID         int
-	UserID     int64
-	Contract   int
-	TariffName string
-	AppealData AppealData
+type Contract struct {
+	ID           int
+	UserID       int64
+	ContractID   int
+	TariffName   string
+	ContractData ContractData
 }
 
-type AppealData struct {
+type ContractData struct {
 	FullName string
 	Address  string
 	Email    string
@@ -70,7 +70,7 @@ func New(storagePath string) (s *Storage, err error) {
 		is_hide INTEGER NOT NULL DEFAULT 0
 		)`,
 
-		`CREATE TABLE IF NOT EXISTS appeals(
+		`CREATE TABLE IF NOT EXISTS contracts(
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		id_user INTEGER NOT NULL,
 		tariff_name TEXT NOT NULL,
@@ -79,7 +79,7 @@ func New(storagePath string) (s *Storage, err error) {
 		address TEXT NOT NULL,
 		email TEXT NOT NULL,
 		phone TEXT NOT NULL,
-		status TEXT NOT NULL DEFAULT Открыта
+		status TEXT NOT NULL
 		)`,
 	}
 

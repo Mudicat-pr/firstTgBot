@@ -7,14 +7,15 @@ const (
 	TariffBody
 	TariffPrice
 	TariffAdd
+	TariffAddConfirm
+
 	DelTariff
 
 	// Скрытие тарифа (админка)
 	Hide
 
-	// Константы для редактирования договора. Сигнатура a_ от сокращения appeal
-	EditTariff
-	EdtiAppeal
+	//
+	ContractDetails
 
 	// Изменение тарифов
 	TariffEdit
@@ -22,4 +23,26 @@ const (
 	TariffBodyEdit
 	TariffPriceEdit
 	TariffEditConfirm
+
+	TariffDetails
+
+	// Создание заявки
+	ContractSubmit
+	ContractFullname
+	ContractAddress
+	ContractEmail
+	ContractPhone
+
+	// Редактирование заявки
+	ContractEdit
+	ContractEditFullname
+	ContractEditAddress
+	ContractEditEmail
+	ContractEditPhone
+	ContractEditConfirm
+
+	DeleteContract
+
+	SwitchStart
+	SwitchEnd
 )

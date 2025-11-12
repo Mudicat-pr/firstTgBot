@@ -23,22 +23,3 @@ func IsAdmin(msg *tgbotapi.Message) bool {
 	}
 	return true
 }
-
-/*func IsHasAppeal(msg tgbotapi.Message, s *storage.AppealHandle) bool {
-	userID := msg.From.ID
-	flag, err := s.Details(userID)
-	if err != nil {
-		fmt.Printf("Can't insert data: %v", err)
-		return flag
-	}
-	return flag
-}*/
-
-/*
-func CheckTariff(tariffID int, s *storage.TariffHandle) (bool, error) {
-	trf, err := s.Details(tariffID)
-	if err != nil {
-		return false, e.Wrap("Failed check data", err)
-	}
-	return trf.ID != 0, nil
-} */

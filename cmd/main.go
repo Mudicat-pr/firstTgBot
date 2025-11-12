@@ -32,10 +32,10 @@ func main() {
 	fsm := tools.New()
 
 	baseVariables := handlers.BaseVar{
-		Bot:      bot,
-		F:        fsm,
-		AppealDB: &storage.AppealHandle{S: store},
-		TariffDB: &storage.TariffHandle{S: store},
+		Bot:        bot,
+		F:          fsm,
+		ContractDB: &storage.ContractHandle{S: store},
+		TariffDB:   &storage.TariffHandle{S: store},
 	}
 	adminVar := admin.AdminHandle{BaseVar: &baseVariables}
 	userVar := user.UserHandle{BaseVar: &baseVariables}
@@ -49,25 +49,38 @@ func main() {
 func regState(f *tools.FSM, a *admin.AdminHandle, u *user.UserHandle) {
 	// Admin states
 
-	f.Register(tools.TariffTitle, tools.BindState(a, (*admin.AdminHandle).SetTitle))
-	f.Register(tools.TariffBody, tools.BindState(a, (*admin.AdminHandle).SetBody))
-	f.Register(tools.TariffPrice, tools.BindState(a, (*admin.AdminHandle).SetPrice))
+	f.Register(tools.TariffTitle, tools.BindState(a, (*admin.AdminHandle).AddChain))
+	f.Register(tools.TariffBody, tools.BindState(a, (*admin.AdminHandle).AddChain))
+	f.Register(tools.TariffPrice, tools.BindState(a, (*admin.AdminHandle).AddChain))
+
 	f.Register(tools.DelTariff, tools.BindState(a, (*admin.AdminHandle).Del))
 
 	f.Register(tools.TariffEdit, tools.BindState(a, (*admin.AdminHandle).StartEdit))
-	f.Register(tools.TariffTitleEdit, tools.BindState(a, (*admin.AdminHandle).EditTitle))
-	f.Register(tools.TariffBodyEdit, tools.BindState(a, (*admin.AdminHandle).EditBody))
-	f.Register(tools.TariffPriceEdit, tools.BindState(a, (*admin.AdminHandle).EditPrice))
-	f.Register(tools.TariffEditConfirm, tools.BindState(a, (*admin.AdminHandle).EditConfirm))
+	f.Register(tools.TariffTitleEdit, tools.BindState(a, (*admin.AdminHandle).EditChain))
+	f.Register(tools.TariffBodyEdit, tools.BindState(a, (*admin.AdminHandle).EditChain))
+	f.Register(tools.TariffPriceEdit, tools.BindState(a, (*admin.AdminHandle).EditChain))
 
 	f.Register(tools.Hide, tools.BindState(a, (*admin.AdminHandle).Hide))
-	/*
-		f.Register(tools.HideByTariffID, tools.BindState(a, (*admin.AdminHandle).HideByID))
-		f.Register(tools.EditTariff, tools.BindState(a, (*admin.AdminHandle).Edit))
 
-		// User states
-		f.Register(tools.DetailsTariff, tools.BindState(u, (*user.UserHandle).Detail))
-		f.Register(tools.SubmitAppeal, tools.BindState(u, (*user.UserHandle).Add))
+	f.Register(tools.DeleteContract, tools.BindState(a, (*admin.AdminHandle).DelContract))
 
-	*/
+	f.Register(tools.SwitchStart, tools.BindState(a, (*admin.AdminHandle).ContractStatus))
+	f.Register(tools.SwitchEnd, tools.BindState(a, (*admin.AdminHandle).SwitchStatus))
+
+	// User states
+	f.Register(tools.TariffDetails, tools.BindState(u, (*user.UserHandle).DetailTariff))
+
+	f.Register(tools.ContractSubmit, tools.BindState(u, (*user.UserHandle).StartAdd))
+	f.Register(tools.ContractFullname, tools.BindState(u, (*user.UserHandle).AddChain))
+	f.Register(tools.ContractAddress, tools.BindState(u, (*user.UserHandle).AddChain))
+	f.Register(tools.ContractEmail, tools.BindState(u, (*user.UserHandle).AddChain))
+	f.Register(tools.ContractPhone, tools.BindState(u, (*user.UserHandle).AddChain))
+	f.Register(tools.ContractEdit, tools.BindState(u, (*user.UserHandle).EditChain))
+	f.Register(tools.ContractEditFullname, tools.BindState(u, (*user.UserHandle).EditChain))
+	f.Register(tools.ContractEditAddress, tools.BindState(u, (*user.UserHandle).EditChain))
+	f.Register(tools.ContractEditEmail, tools.BindState(u, (*user.UserHandle).EditChain))
+	f.Register(tools.ContractEditPhone, tools.BindState(u, (*user.UserHandle).EditChain))
+
+	f.Register(tools.ContractDetails, tools.BindState(u, (*user.UserHandle).DetailContract))
+
 }

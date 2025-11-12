@@ -16,7 +16,6 @@ type UserHandle struct {
 	*h.BaseVar
 }
 
-// Return in tg chat all tariffs
 func (t *UserHandle) All(msg *tgbotapi.Message, flag bool) (err error) {
 	defer func() { err = e.WrapIfErr("Failed to select tariffs from DB", err) }()
 	rows, err := t.TariffDB.AllTariffs()
@@ -52,24 +51,23 @@ func buildRows(rows []storage.Tariff, flag bool) string {
 }
 
 // Return details by one of selected tariffs
-func (t *UserHandle) Detail(msg *tgbotapi.Message) (err error) {
+func (t *UserHandle) DetailTariff(msg *tgbotapi.Message, data interface{}) (state int, newData interface{}, err error) {
 	defer func() { err = e.WrapIfErr("Can't select tariff for view details", err) }()
 
+	currentState := t.F.UserState(msg.From.ID)
 	tariffID, err := h.MsgToInt(msg.Text)
 	if err != nil {
-		h.MsgForUser(*t.Bot, msg.Chat.ID, "Тарифа с таким ID не существует или он не доступен в данный момент")
-		return err
+		h.MsgForUser(*t.Bot, msg.Chat.ID, "Неверный ID тарифа. Введите новый ID")
+		return currentState, nil, err
 	}
 	row, err := t.TariffDB.Details(tariffID)
 	if row.IsHide == h.FlagTrue {
-		t.F.ClearState(msg.From.ID)
 		h.MsgForUser(*t.Bot, msg.Chat.ID, "Тарифа с таким ID не существует или он не доступен в данный момент")
-		return err
+		return 0, nil, nil
 	}
 	header := fmt.Sprintf("Вы выбрали тариф %d - %s: \n", row.ID, row.Title)
 	body := fmt.Sprintf("Описание: %s\nЦена: %d рублей", row.Body, row.Price)
 
 	h.MsgForUser(*t.Bot, msg.Chat.ID, header+body)
-	defer t.F.ClearState(msg.From.ID)
-	return err
+	return 0, nil, nil
 }
