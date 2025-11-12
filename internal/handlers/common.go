@@ -1,10 +1,15 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
+	"net/smtp"
 	"strconv"
 
+	"github.com/Mudicat-pr/firstTgBot/config"
 	"github.com/Mudicat-pr/firstTgBot/internal/storage"
 	"github.com/Mudicat-pr/firstTgBot/internal/tools"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -55,4 +60,34 @@ func MsgForUser(bot tgbotapi.BotAPI, userChatID int64, text string) {
 func MsgToInt(msg string) (res int, err error) {
 	res, err = strconv.Atoi(msg)
 	return res, err
+}
+
+func EmailNotification(ap *storage.Contract) error {
+	cfg, err := config.ReadConfig()
+	if err != nil {
+		log.Printf("Произошла неизвестная ошибка: %v", err)
+		return err
+	}
+	c := *cfg.SMTP
+	header := "Subject: Новая заявка!"
+	data := ap.ContractData
+	body := fmt.Sprintf(`Номер контракта №%d
+
+Выбранный тариф: %s
+ФИО: %s
+Адрес проживания: %s
+Эл. почта: %s
+Номер телефона: %s
+	`, ap.ContractID,
+		ap.TariffName,
+		data.FullName,
+		data.Address,
+		data.Email,
+		data.Phone)
+	msg := []byte(header + "\r\n" + body)
+	auth := smtp.PlainAuth("", c.Username, c.Password, c.Host)
+	addr := fmt.Sprintf("%s:%d", c.Host, c.Port)
+	to := []string{c.AdminName}
+
+	return smtp.SendMail(addr, auth, c.Username, to, msg)
 }

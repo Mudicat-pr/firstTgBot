@@ -2,6 +2,7 @@ package tools
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/Mudicat-pr/firstTgBot/pkg/e"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -11,6 +12,7 @@ type StateFunc func(msg *tgbotapi.Message, data interface{}) (
 	NextState int, UserData interface{}, err error)
 
 type FSM struct {
+	mu           sync.RWMutex
 	currentState map[int64]int         // Текущий статус. Крепится за юзером
 	data         map[int64]interface{} // Данные. Аналогично статусу
 	handle       map[int]StateFunc     // Хендлер для обработки шагов
@@ -25,19 +27,27 @@ func New() *FSM {
 }
 
 func (f *FSM) SetState(userID int64, state int) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.currentState[userID] = state
 }
 
 func (f *FSM) UserState(userID int64) int {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	return f.currentState[userID]
 }
 
 func (f *FSM) Register(state int, handle StateFunc) *FSM {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.handle[state] = handle
 	return f
 }
 
 func (f *FSM) ClearState(userID int64) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	delete(f.currentState, userID)
 	delete(f.data, userID)
 }
@@ -52,11 +62,12 @@ func BindState[T any](recv T,
 }
 
 func (f *FSM) HandleState(msg *tgbotapi.Message) (err error) {
-
 	defer func() { err = e.WrapIfErr("Check HandleState in FSM", err) }()
+	f.mu.RLock()
 	userID := msg.From.ID
-	state := f.UserState(userID)
+	state := f.currentState[userID]
 	handle, ok := f.handle[state]
+	f.mu.RUnlock()
 	if !ok {
 		return errors.New("Can't found handler for this state")
 	}
@@ -70,7 +81,7 @@ func (f *FSM) HandleState(msg *tgbotapi.Message) (err error) {
 	if nextState == 0 {
 		f.ClearState(userID)
 	} else {
-		f.SetState(userID, nextState)
+		f.currentState[userID] = nextState
 	}
 	return nil
 }

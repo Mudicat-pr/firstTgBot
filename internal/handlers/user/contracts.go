@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 
 	h "github.com/Mudicat-pr/firstTgBot/internal/handlers"
@@ -106,7 +107,7 @@ func (u *UserHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps 
 		ap := setStruct(data)
 		switch mode {
 		case addMode:
-			newContract := idgen.IDgenerator(userID)
+			newContract := idgen.IDgenerator()
 			err = u.ContractDB.Add(
 				ap.TariffName,
 				msg.From.ID,
@@ -120,6 +121,11 @@ func (u *UserHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps 
 				h.MsgForUser(*u.Bot, userID, "Произошла ошибка при оформлении")
 				return 0, nil, err
 			}
+			go func(contractCopy *storage.Contract) {
+				if err := h.EmailNotification(contractCopy); err != nil {
+					log.Printf("Ошибка отправки email для контракта %d: %v", contractCopy.ContractID, err)
+				}
+			}(ap)
 			text := fmt.Sprintf("Ваша заявки отправлена. Ее статус и номер: %s, №%d", h.ContractOpened, newContract)
 			h.MsgForUser(*u.Bot, userID, text)
 		case editMode:

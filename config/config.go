@@ -11,6 +11,15 @@ import (
 type Config struct {
 	AdminID  int64  `yaml:"admin_id"`
 	TokenStr string `yaml:"bot_token"`
+	SMTP     *SMTP  `yaml:"smtp"`
+}
+
+type SMTP struct {
+	Host      string `yaml:"host"`
+	Port      int    `yaml:"port"`
+	Username  string `yaml:"username"`
+	Password  string `yaml:"password"`
+	AdminName string `yaml:"admin"`
 }
 
 func ReadConfig() (cfg *Config, err error) {
