@@ -37,13 +37,15 @@ func main() {
 		ContractDB: &storage.ContractHandle{S: store},
 		TariffDB:   &storage.TariffHandle{S: store},
 	}
+	contractHandle := &storage.ContractHandle{S: store}
+	tariffHandle := &storage.TariffHandle{S: store}
 	adminVar := admin.AdminHandle{BaseVar: &baseVariables}
 	userVar := user.UserHandle{BaseVar: &baseVariables}
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 	regState(fsm, &adminVar, &userVar)
-	upd.UpdateTg(bot, updates, store, fsm, &adminVar, &userVar)
+	upd.UpdateTg(bot, updates, store, fsm, &adminVar, &userVar, contractHandle, tariffHandle)
 }
 
 func regState(f *tools.FSM, a *admin.AdminHandle, u *user.UserHandle) {

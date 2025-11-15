@@ -61,7 +61,6 @@ func New(storagePath string) (s *Storage, err error) {
 
 	// Можно дополнить количество таблиц в этот срез
 	tables := []string{
-
 		`CREATE TABLE IF NOT EXISTS tariffs(
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT NOT NULL,

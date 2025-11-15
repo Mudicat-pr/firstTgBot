@@ -30,6 +30,8 @@ const (
 	SkipText = "Нет данных для пропуска"
 	Skip     = "Пропустить"
 	SkipHint = "\n\n<i>Вы можете проспутить шаг, введя ключевое слово </i>" + Skip
+
+	Cancel = "/cancel"
 )
 
 // Флаги и иные константы для работы с булевой датой
@@ -62,7 +64,7 @@ func MsgToInt(msg string) (res int, err error) {
 	return res, err
 }
 
-func EmailNotification(ap *storage.Contract) error {
+func EmailNotification(ap *storage.Contract, contractID int) error {
 	cfg, err := config.ReadConfig()
 	if err != nil {
 		log.Printf("Произошла неизвестная ошибка: %v", err)
@@ -78,7 +80,7 @@ func EmailNotification(ap *storage.Contract) error {
 Адрес проживания: %s
 Эл. почта: %s
 Номер телефона: %s
-	`, ap.ContractID,
+	`, contractID,
 		ap.TariffName,
 		data.FullName,
 		data.Address,

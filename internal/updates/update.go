@@ -1,6 +1,7 @@
 package upd
 
 import (
+	"fmt"
 	"log"
 
 	h "github.com/Mudicat-pr/firstTgBot/internal/handlers"
@@ -11,109 +12,133 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const UserHelper = `Я могу помочь вам  выбрать интересующий вас тариф нашего сотового оператора, и оставить заявку по подключению!
+const UserHelper = `
+Для общения с ботом используйте следующие ключевые слова:
 
-/all - Список всех доступных тарифных планов.
-/details - Открыть описание интересующего вас тарифа.
-/submit - Оставить заявку на подключение тарифного плана.
-/cancel - Отменить действие.
+<b>Все, Все тарифы, Тарифы все</b>
+<i>Список всех доступных тарифных планов</i>
 
-Я ещё молодой бот, возможно список доступных команд будет расширяться. Если я вам буду нужен - просто напишите любое сообщение в чат☺️`
+<b>Подробнее, Детали, О тарифе</b>
+<i>Просмотр деталей тарифного плана</i>
 
-const AdminHelper = `Дорогой администратор, вот все доступные команды:
+<b>Отправить заявку, Создать заявку, Сформировать заявку</b>
+<i>Заполнение формы для отправки вашей заявки на обработку</i>
+
+<b>Заявка, Моя заявка, Договор, Мой договор</b>
+<i>Просмотр вашей заявки/договора</i>
+
+<b>Изменить заявку</b>
+<i>Перезаполнить форму для изменения заявки</i>
+`
+
+var AdminHelper = fmt.Sprintf(`Дорогой администратор, вот все доступные команды:
 
 Пользовательские (общие):
-/all - Список всех доступных тарифных планов.
-/details - Открыть описание интересующего вас тарифа.
-/submit - Оставить заявку на подключение тарифного плана.
-/cancel - Отменить действие.
+%s
 
 Команды для управления (доступны только администраторам):
-/add - Добавить новый тарифный план.
-/del - Удалить тарифный план. ‼️ВНИМАНИЕ‼: Удаленный тарифный план не подлежит восстановлению.
-/hide - Спрятать тарифный план. Спрятанный тарифный план невидим для списка /all у пользователя.
-/all_hidden - Просмотреть все скрытые тарифные планы.
-/edit - Изменить тарифный план.
-`
+<b>Спрятанные, Все спрятанные</b>
+<i>Список всех спрятанных тарифов</i>
+
+<b>Новый тариф, Создать тариф, Добавить тариф</b>
+<i>Создание нового тарифного плата и его добавление в список Все</i>
+
+<b>Удалить тариф, Тариф удалить</b>
+<i>Удаленный тариф вернуть будет невозможно</i>
+
+<b>Изменить тариф</b>
+<i>Изменение тарифа будет схоже с добавлением</i>
+
+<b>Спрятать тариф, Открыть тариф</b>
+<i>Чтоб тариф не было видно в общем списке. Альтернатива удалению</i>
+
+<b>Изменить статус заявки, Изменить статус договора, Изменить статус</b>
+<i>При изменении статуса пользователь получит уведомление</i>
+
+<b>Удалить заявку, Удалить договор</b>
+<i>Рекомендую перед этим изменить статус, чтоб пользователь получил уведомление</i>
+`, UserHelper)
 
 func UpdateTg(bot *tgbotapi.BotAPI,
 	updates tgbotapi.UpdatesChannel,
 	s *storage.Storage,
 	f *tools.FSM,
 	a *admin.AdminHandle,
-	u *user.UserHandle) {
+	u *user.UserHandle,
+	contractHandle *storage.ContractHandle,
+	tariffHandle *storage.TariffHandle) {
 
-	r := New(bot, f, h.IsAdmin) // Роутер
+	r := New(bot, f, h.IsAdmin, contractHandle, tariffHandle) // Роутер
 
 	r.Register(Command{
-		Name: "/all",
+		Name: cmdAll,
 		Handle: func(msg *tgbotapi.Message) {
 			u.All(msg, h.FlagTrue)
 		},
 	})
 	r.Register(Command{
-		Name:   "/tariff",
+		Name:   cmdDetailsT,
 		State:  tools.TariffDetails,
-		Prompt: PromptDetailsTariff + CancelMessage,
+		Prompt: PromptDetailsTariff,
 	})
 
 	r.Register(Command{
-		Name:   "/create",
+		Name:   cmdSubmit,
 		State:  tools.ContractSubmit,
-		Prompt: PromptContractCreate + CancelMessage,
+		Prompt: PromptContractCreate,
 	})
 	r.Register(Command{
-		Name:      "/new",
+		Name:      cmdAddT,
 		AdminOnly: h.FlagTrue,
 		State:     tools.TariffTitle,
-		Prompt:    PromptAddTariff + CancelMessage,
+		Prompt:    PromptAddTariff,
 	})
 	r.Register(Command{
-		Name:      "/del",
+		Name:      cmdDelT,
 		AdminOnly: h.FlagTrue,
 		State:     tools.DelTariff,
-		Prompt:    PromptDelTariff + CancelMessage,
+		Prompt:    PromptDelTariff,
 	})
 	r.Register(Command{
-		Name:      "/hide",
+		Name:      cmdHide,
 		AdminOnly: h.FlagTrue,
 		State:     tools.Hide,
-		Prompt:    PromptHideTariff + CancelMessage,
+		Prompt:    PromptHideTariff,
 	})
 	r.Register(Command{
-		Name:      "/all_hidden",
+		Name:      cmdAllHidden,
 		AdminOnly: h.FlagTrue,
 		Handle: func(msg *tgbotapi.Message) {
 			u.All(msg, h.FlagFalse)
 		},
 	})
 	r.Register(Command{
-		Name:   "/edit_contract",
+		Name:   cmdEditC,
 		State:  tools.ContractEdit,
-		Prompt: PromptEditContract + CancelMessage,
+		Prompt: PromptEditContract,
 	})
 	r.Register(Command{
-		Name:      "/edit_tariff",
+		Name:      cmdEditT,
 		State:     tools.TariffEdit,
 		AdminOnly: h.FlagTrue,
-		Prompt:    PromptEditTariff + CancelMessage,
+		Prompt:    PromptEditTariff,
 	})
 	r.Register(Command{
-		Name:   "/contract",
+		Name:   cmdDetailsC,
 		State:  tools.ContractDetails,
 		Prompt: PromptDetailsContract,
 	})
 	r.Register(Command{
-		Name:      "/del_contract",
+		Name:      cmdDelC,
 		State:     tools.DeleteContract,
 		AdminOnly: h.FlagTrue,
-		Prompt:    PromptDeleteContract + CancelMessage,
+		Prompt:    PromptDeleteContract,
 	})
 	r.Register(Command{
-		Name:      "/switch",
+		Name:      cmdSwitch,
 		State:     tools.SwitchStart,
 		AdminOnly: h.FlagTrue,
-		Prompt:    PromptSwitchStatus + CancelMessage,
+		Prompt:    PromptSwitchStatus,
 	})
 	for update := range updates {
 		if update.Message == nil {
@@ -122,8 +147,12 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 		msg := update.Message
 
 		if msg.Text == "/cancel" {
-			f.ClearState(msg.From.ID)
-			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Операция успешно отменена!"))
+			if f.UserState(msg.From.ID) != 0 {
+				f.ClearState(msg.From.ID)
+				h.MsgForUser(*bot, msg.From.ID, "Операция успешно отменена!")
+			} else {
+				h.MsgForUser(*bot, msg.From.ID, "Нет операций для отмены")
+			}
 		}
 
 		if state := f.UserState(msg.From.ID); state != 0 {
@@ -132,9 +161,8 @@ func UpdateTg(bot *tgbotapi.BotAPI,
 			continue
 		}
 		log.Printf("[%s] %s", msg.From.UserName, msg.Text)
-		log.Printf("Before router: user state = %d", f.UserState(msg.From.ID))
 		r.Handle(msg)
-		log.Printf("After router: user state = %d", f.UserState(msg.From.ID))
+
 	}
 }
 

@@ -28,10 +28,6 @@ func (t *TariffHandle) AllTariffs() (tariff []Tariff, err error) {
 		if err = rows.Scan(&trf.ID, &trf.Title, &trf.Price, &trf.IsHide); err != nil {
 			return tariffs, err
 		}
-		/*
-			if trf.IsHide {
-				continue
-			}*/
 		tariffs = append(tariffs, trf)
 	}
 	if err = rows.Err(); err != nil {

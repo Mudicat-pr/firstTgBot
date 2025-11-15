@@ -39,9 +39,10 @@ func (u *UserHandle) handle(msg *tgbotapi.Message, data interface{}, nextState, 
 	currentState := u.F.UserState(userID)
 
 	if msg.Text == h.Skip {
+
 		actualData, err := u.actualField(trf, msg, field)
 		if err != nil {
-			h.MsgForUser(*u.Bot, userID, "Невозможно пропустить шаг")
+			h.MsgForUser(*u.Bot, userID, "Произошла ошибка при попытке пропустить шаг")
 			return currentState, trf, err
 		}
 		return nextState, actualData, nil
@@ -57,11 +58,22 @@ func (u *UserHandle) handle(msg *tgbotapi.Message, data interface{}, nextState, 
 }
 
 func (u *UserHandle) actualField(data *storage.Contract, msg *tgbotapi.Message, field int) (*storage.Contract, error) {
+	contractID := data.ContractID
+
+	if contractID == 0 {
+		existingContract, err := u.ContractDB.Contract(msg.From.ID)
+		if err != nil || existingContract == 0 {
+			return data, errors.New("нет существующего контракта для пропуска")
+		}
+		contractID = existingContract
+		data.ContractID = contractID
+	}
+
 	actualData, err := u.ContractDB.Detail(msg.From.ID, data.ContractID)
 	if err != nil {
-		h.MsgForUser(*u.Bot, msg.From.ID, h.SkipText)
 		return data, e.Wrap("Failed select actual data", err)
 	}
+
 	switch field {
 	case fieldTariffName:
 		data.TariffName = actualData.TariffName
@@ -100,8 +112,14 @@ func (u *UserHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps 
 	if !exists {
 		return 0, nil, errors.New("State is not defined")
 	}
-	h.MsgForUser(*u.Bot, userID, step.Prompt)
+
 	state, newData, err = u.handle(msg, data, step.NextState, step.Field)
+
+	if mode == editMode {
+		msgText := tgbotapi.NewMessage(msg.Chat.ID, step.Prompt)
+		msgText.ReplyMarkup = h.CreateSkipKey()
+		u.Bot.Send(msgText)
+	}
 
 	if step.NextState == 0 && err == nil {
 		ap := setStruct(data)
@@ -122,7 +140,7 @@ func (u *UserHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps 
 				return 0, nil, err
 			}
 			go func(contractCopy *storage.Contract) {
-				if err := h.EmailNotification(contractCopy); err != nil {
+				if err := h.EmailNotification(contractCopy, newContract); err != nil {
 					log.Printf("Ошибка отправки email для контракта %d: %v", contractCopy.ContractID, err)
 				}
 			}(ap)
@@ -193,10 +211,10 @@ func (u *UserHandle) AddChain(msg *tgbotapi.Message, data interface{}) (state in
 func (u *UserHandle) EditChain(msg *tgbotapi.Message, data interface{}) (state int, newData interface{}, err error) {
 	defer func() { err = e.WrapIfErr("Failed to edit appeal/contract", err) }()
 	steps := map[int]StepConfig{
-		tools.ContractEdit:         {tools.ContractEditFullname, "Введите новое ФИО" + h.SkipHint, fieldTariffName},
-		tools.ContractEditFullname: {tools.ContractEditAddress, "Введите новый адрес проживания" + h.SkipHint, fieldFullname},
-		tools.ContractEditAddress:  {tools.ContractEditEmail, "Введите новый адрес электронной почты" + h.SkipHint, fieldAddress},
-		tools.ContractEditEmail:    {tools.ContractEditPhone, "Введите новый номер телефона" + h.SkipHint, fieldEmail},
+		tools.ContractEdit:         {tools.ContractEditFullname, "Введите новое ФИО", fieldTariffName},
+		tools.ContractEditFullname: {tools.ContractEditAddress, "Введите новый адрес проживания", fieldFullname},
+		tools.ContractEditAddress:  {tools.ContractEditEmail, "Введите новый адрес электронной почты", fieldAddress},
+		tools.ContractEditEmail:    {tools.ContractEditPhone, "Введите новый номер телефона", fieldEmail},
 		tools.ContractEditPhone:    {0, "", fieldPhone},
 	}
 	return u.chainHelper(msg, data, steps, editMode)
@@ -215,7 +233,7 @@ func (u *UserHandle) DetailContract(msg *tgbotapi.Message, data interface{}) (st
 		}
 		userID, err = u.ContractDB.UserIDContract(contract)
 		if err != nil {
-			h.MsgForUser(*u.Bot, msg.From.ID, "У пользователя нет заяки или она не найдена")
+			h.MsgForUser(*u.Bot, msg.From.ID, "У пользователя нет заявнеки или она не найдена")
 		}
 
 	} else {
