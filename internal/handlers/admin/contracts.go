@@ -61,6 +61,7 @@ func (a *AdminHandle) switchHelper(msg *tgbotapi.Message, data *storage.Contract
 	}(botCopy, data.UserID, notificationText)
 
 	h.MsgForUser(*a.Bot, msg.From.ID, "Статус успешно изменен!")
+	a.F.UserState(msg.From.ID)
 	return 0, nil, nil
 }
 
@@ -94,7 +95,9 @@ func (a *AdminHandle) ContractStatus(msg *tgbotapi.Message, data interface{}) (s
 		h.ContractOpened,
 		h.ContractClosed,
 		h.ContractBan)
-	h.MsgForUser(*a.Bot, msg.From.ID, selectStatus)
+	botMsg := tgbotapi.NewMessage(msg.From.ID, selectStatus)
+	botMsg.ReplyMarkup = h.SwitchStatusKey()
+	a.Bot.Send(botMsg)
 	return tools.SwitchEnd, ap, nil
 }
 

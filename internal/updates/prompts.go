@@ -58,18 +58,18 @@ func reverseCmdMap(Cmds map[int][]string) map[string]int {
 }
 
 func PromptAddTariff(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
-	return "Введите имя для нового тарифа" + CancelMessage, tgbotapi.ReplyKeyboardMarkup{}
+	return "Введите имя для нового тарифа" + CancelMessage, h.CancelKey()
 }
 
 func PromptDelTariff(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
 	return `
 Для удаления тарифа введите его ID.
 
-<b>ВЕРНУТЬ УДАЛЕННЫЙ ТАРИФ БУДЕТ НЕВОЗМОЖНО</b>` + CancelMessage, tgbotapi.ReplyKeyboardMarkup{}
+<b>ВЕРНУТЬ УДАЛЕННЫЙ ТАРИФ БУДЕТ НЕВОЗМОЖНО</b>` + CancelMessage, h.CancelKey()
 }
 
 func PromptEditTariff(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
-	return "Введите ID тарифа для его изменения" + CancelMessage, tgbotapi.ReplyKeyboardMarkup{}
+	return "Введите ID тарифа для его изменения" + CancelMessage, h.CreateSkipKey()
 }
 
 func PromptDetailsTariff(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
@@ -78,11 +78,11 @@ func PromptDetailsTariff(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) 
 		f.ClearState(msg.From.ID)
 		return "Нет тарифов для просмотра подробностей", tgbotapi.ReplyKeyboardMarkup{}
 	}
-	return "Введите ID интересующего тарифа" + CancelMessage, tgbotapi.ReplyKeyboardMarkup{}
+	return "Введите ID интересующего тарифа" + CancelMessage, h.CancelKey()
 }
 
 func PromptHideTariff(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
-	return "Введите ID тарифа для его скрытия", tgbotapi.ReplyKeyboardMarkup{}
+	return "Введите ID тарифа для его скрытия", h.CancelKey()
 }
 
 func PromptContractCreate(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
@@ -95,7 +95,7 @@ func PromptContractCreate(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct)
 		f.ClearState(msg.From.ID)
 		return "У вас уже есть действующий тариф, создать новый невозможно", tgbotapi.ReplyKeyboardMarkup{}
 	}
-	return "Введите имя тарифного плана" + CancelMessage, tgbotapi.ReplyKeyboardMarkup{}
+	return "Введите имя тарифного плана" + CancelMessage, h.CancelKey()
 }
 
 func PromptEditContract(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
@@ -115,13 +115,13 @@ func PromptEditContract(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (
 func PromptDeleteContract(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
 	return `Введите номер контракта.
 	
-Внимание: после удаления вернуть данные о договоре будет невозможно` + CancelMessage, tgbotapi.ReplyKeyboardMarkup{}
+Внимание: после удаления вернуть данные о договоре будет невозможно` + CancelMessage, h.CancelKey()
 }
 
 func PromptSwitchStatus(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
-	return "Введите номер контракта/заявки для изменения статуса", tgbotapi.ReplyKeyboardMarkup{}
+	return "Введите номер контракта/заявки для изменения статуса", h.CancelKey()
 }
 
 func PromptDetailsContract(msg *tgbotapi.Message, f *tools.FSM, un *UnitedStruct) (string, tgbotapi.ReplyKeyboardMarkup) {
-	return "Введите номер договора/заявки", tgbotapi.ReplyKeyboardMarkup{}
+	return "Введите номер договора/заявки", h.CancelKey()
 }

@@ -46,7 +46,7 @@ func buildRows(rows []storage.Tariff, flag bool) string {
 	case h.FlagFalse:
 		header = "<b>Все скрытые тарифы:</b> \n\n"
 	}
-	footer := "<i>Если желаете узнать подробнее - пишите в чат /details</i>"
+	footer := "<i>Если желаете узнать подробнее - пишите в чат Подробнее</i>"
 	return header + message.String() + "\n" + footer
 }
 

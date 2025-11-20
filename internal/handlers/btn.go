@@ -10,3 +10,24 @@ func CreateSkipKey() tgbotapi.ReplyKeyboardMarkup {
 		),
 	)
 }
+
+func CancelKey() tgbotapi.ReplyKeyboardMarkup {
+	return tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(Cancel),
+		),
+	)
+}
+
+func SwitchStatusKey() tgbotapi.ReplyKeyboardMarkup {
+	return tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(ContractOpened),
+			tgbotapi.NewKeyboardButton(ContractProcess),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(ContractProcess),
+			tgbotapi.NewKeyboardButton(ContractBan),
+		),
+	)
+}

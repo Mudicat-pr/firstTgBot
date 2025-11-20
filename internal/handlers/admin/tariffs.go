@@ -130,8 +130,17 @@ func (a *AdminHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps
 	if !exists {
 		return 0, nil, errors.New("State is not defined")
 	}
-	h.MsgForUser(*a.Bot, userID, step.Prompt)
+
 	state, newData, err = a.handle(msg, data, step.NextState, step.Field)
+
+	msgText := tgbotapi.NewMessage(msg.Chat.ID, step.Prompt)
+	if mode == editMode {
+		msgText.ReplyMarkup = h.CreateSkipKey()
+		a.Bot.Send(msgText)
+	} else {
+		msgText.ReplyMarkup = h.CancelKey()
+		a.Bot.Send(msgText)
+	}
 
 	if step.NextState == 0 && err == nil {
 		trf := setStruct(data)

@@ -115,9 +115,12 @@ func (u *UserHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps 
 
 	state, newData, err = u.handle(msg, data, step.NextState, step.Field)
 
+	msgText := tgbotapi.NewMessage(msg.Chat.ID, step.Prompt)
 	if mode == editMode {
-		msgText := tgbotapi.NewMessage(msg.Chat.ID, step.Prompt)
 		msgText.ReplyMarkup = h.CreateSkipKey()
+		u.Bot.Send(msgText)
+	} else {
+		msgText.ReplyMarkup = h.CancelKey()
 		u.Bot.Send(msgText)
 	}
 
