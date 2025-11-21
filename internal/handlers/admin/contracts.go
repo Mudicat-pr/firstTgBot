@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"strconv"
 
 	h "github.com/Mudicat-pr/firstTgBot/internal/handlers"
@@ -26,6 +27,7 @@ func (a *AdminHandle) DelContract(msg *tgbotapi.Message, data interface{}) (stat
 	}
 
 	h.MsgForUser(*a.Bot, msg.From.ID, "Данные о заявке/контракте безвозвратно удалены")
+	slog.Info("Admin deleted appeal/contract", "ID", contractID, "Admin username", msg.From.UserName)
 	return 0, nil, nil
 
 }
@@ -61,7 +63,8 @@ func (a *AdminHandle) switchHelper(msg *tgbotapi.Message, data *storage.Contract
 	}(botCopy, data.UserID, notificationText)
 
 	h.MsgForUser(*a.Bot, msg.From.ID, "Статус успешно изменен!")
-	a.F.UserState(msg.From.ID)
+	a.F.ClearState(msg.From.ID)
+	slog.Info("Admin switch status of appeal", "appeal ID", data.ContractID, "Admin", msg.From.UserName, "New status", newStatus)
 	return 0, nil, nil
 }
 
@@ -98,6 +101,7 @@ func (a *AdminHandle) ContractStatus(msg *tgbotapi.Message, data interface{}) (s
 	botMsg := tgbotapi.NewMessage(msg.From.ID, selectStatus)
 	botMsg.ReplyMarkup = h.SwitchStatusKey()
 	a.Bot.Send(botMsg)
+
 	return tools.SwitchEnd, ap, nil
 }
 

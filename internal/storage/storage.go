@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 
 	"github.com/Mudicat-pr/firstTgBot/pkg/e"
 	_ "github.com/mattn/go-sqlite3"
@@ -94,6 +95,7 @@ func New(storagePath string) (s *Storage, err error) {
 func (s *Storage) ExecQuery(ctx context.Context, query string, args ...any) error {
 	_, err := s.db.ExecContext(ctx, query, args...)
 	if err != nil {
+		slog.Error("Unable to execute SQL query", "Query", query, "Error", err)
 		return e.Wrap("can't execute task", err)
 	}
 	return nil

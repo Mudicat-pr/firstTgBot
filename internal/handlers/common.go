@@ -64,7 +64,7 @@ func MsgToInt(msg string) (res int, err error) {
 	return res, err
 }
 
-func EmailNotification(ap *storage.Contract, contractID int) error {
+func EmailNotification(tariff, fullname, address, email, phone string, contractID int) error {
 	cfg, err := config.ReadConfig()
 	if err != nil {
 		log.Printf("Произошла неизвестная ошибка: %v", err)
@@ -72,7 +72,6 @@ func EmailNotification(ap *storage.Contract, contractID int) error {
 	}
 	c := *cfg.SMTP
 	header := "Subject: Новая заявка!"
-	data := ap.ContractData
 	body := fmt.Sprintf(`Номер контракта №%d
 
 Выбранный тариф: %s
@@ -81,11 +80,11 @@ func EmailNotification(ap *storage.Contract, contractID int) error {
 Эл. почта: %s
 Номер телефона: %s
 	`, contractID,
-		ap.TariffName,
-		data.FullName,
-		data.Address,
-		data.Email,
-		data.Phone)
+		tariff,
+		fullname,
+		address,
+		email,
+		phone)
 	msg := []byte(header + "\r\n" + body)
 	auth := smtp.PlainAuth("", c.Username, c.Password, c.Host)
 	addr := fmt.Sprintf("%s:%d", c.Host, c.Port)

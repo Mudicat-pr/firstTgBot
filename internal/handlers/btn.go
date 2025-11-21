@@ -26,7 +26,7 @@ func SwitchStatusKey() tgbotapi.ReplyKeyboardMarkup {
 			tgbotapi.NewKeyboardButton(ContractProcess),
 		),
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton(ContractProcess),
+			tgbotapi.NewKeyboardButton(ContractClosed),
 			tgbotapi.NewKeyboardButton(ContractBan),
 		),
 	)

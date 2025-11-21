@@ -2,12 +2,13 @@ package e
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"time"
 )
 
 func Wrap(msg string, err error) error {
-	return fmt.Errorf("%v, %w", msg, err)
+	slog.Error(msg, "Error", err)
+	return err
 }
 
 func WrapIfErr(msg string, err error) error {

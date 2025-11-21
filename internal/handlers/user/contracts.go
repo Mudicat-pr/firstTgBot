@@ -3,7 +3,7 @@ package user
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"strconv"
 
 	h "github.com/Mudicat-pr/firstTgBot/internal/handlers"
@@ -63,7 +63,7 @@ func (u *UserHandle) actualField(data *storage.Contract, msg *tgbotapi.Message, 
 	if contractID == 0 {
 		existingContract, err := u.ContractDB.Contract(msg.From.ID)
 		if err != nil || existingContract == 0 {
-			return data, errors.New("нет существующего контракта для пропуска")
+			return data, errors.New("Нет существующего контракта для пропуска")
 		}
 		contractID = existingContract
 		data.ContractID = contractID
@@ -126,6 +126,7 @@ func (u *UserHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps 
 
 	if step.NextState == 0 && err == nil {
 		ap := setStruct(data)
+		apData := ap.ContractData
 		switch mode {
 		case addMode:
 			newContract := idgen.IDgenerator()
@@ -133,20 +134,28 @@ func (u *UserHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps 
 				ap.TariffName,
 				msg.From.ID,
 				newContract,
-				ap.ContractData.FullName,
-				ap.ContractData.Address,
-				ap.ContractData.Email,
-				ap.ContractData.Phone,
+				apData.FullName,
+				apData.Address,
+				apData.Email,
+				apData.Phone,
 				h.ContractOpened)
 			if err != nil {
 				h.MsgForUser(*u.Bot, userID, "Произошла ошибка при оформлении")
 				return 0, nil, err
 			}
-			go func(contractCopy *storage.Contract) {
-				if err := h.EmailNotification(contractCopy, newContract); err != nil {
-					log.Printf("Ошибка отправки email для контракта %d: %v", contractCopy.ContractID, err)
+
+			go func(tariff, fullname, address, email, phone string, contractID int) {
+				defer func() {
+					if r := recover(); r != nil {
+						slog.Error("Failed SMTP sending", "Recover", r, "Contract ID", contractID)
+					}
+				}()
+
+				if err := h.EmailNotification(tariff, fullname, address, email, phone, newContract); err != nil {
+					slog.Error("Failed to create mail to send", "Contract ID", contractID, "Error", err)
 				}
-			}(ap)
+			}(ap.TariffName, apData.FullName, apData.Address, apData.Email, apData.Phone, newContract)
+
 			text := fmt.Sprintf("Ваша заявки отправлена. Ее статус и номер: %s, №%d", h.ContractOpened, newContract)
 			h.MsgForUser(*u.Bot, userID, text)
 		case editMode:
@@ -160,20 +169,20 @@ func (u *UserHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps 
 Текущий  статус: %s
 `,
 				ap.TariffName,
-				ap.ContractData.FullName,
-				ap.ContractData.Address,
-				ap.ContractData.Email,
-				ap.ContractData.Phone,
+				apData.FullName,
+				apData.Address,
+				apData.Email,
+				apData.Phone,
 				ap.ContractID,
 				ap.ContractData.Status)
 
 			u.ContractDB.Edit(msg.From.ID,
 				ap.ContractID,
 				ap.TariffName,
-				ap.ContractData.FullName,
-				ap.ContractData.Address,
-				ap.ContractData.Email,
-				ap.ContractData.Phone)
+				apData.FullName,
+				apData.Address,
+				apData.Email,
+				apData.Phone)
 
 			h.MsgForUser(*u.Bot, msg.From.ID, text)
 		}
@@ -208,6 +217,11 @@ func (u *UserHandle) AddChain(msg *tgbotapi.Message, data interface{}) (state in
 		tools.ContractEmail:    {tools.ContractPhone, "Укажите номер телефона", fieldEmail},
 		tools.ContractPhone:    {0, "", fieldPhone},
 	}
+	userState := u.F.UserState(msg.From.ID)
+
+	if cfg, exists := steps[userState]; exists {
+		slog.Info("BOT response", "Message", cfg.Prompt, "State", userState, "NextState", cfg.NextState)
+	}
 	return u.chainHelper(msg, data, steps, addMode)
 }
 
@@ -219,6 +233,11 @@ func (u *UserHandle) EditChain(msg *tgbotapi.Message, data interface{}) (state i
 		tools.ContractEditAddress:  {tools.ContractEditEmail, "Введите новый адрес электронной почты", fieldAddress},
 		tools.ContractEditEmail:    {tools.ContractEditPhone, "Введите новый номер телефона", fieldEmail},
 		tools.ContractEditPhone:    {0, "", fieldPhone},
+	}
+	userState := u.F.UserState(msg.From.ID)
+
+	if cfg, exists := steps[userState]; exists {
+		slog.Info("BOT response", "Message", cfg.Prompt, "State", userState, "NextState", cfg.NextState)
 	}
 	return u.chainHelper(msg, data, steps, editMode)
 }
@@ -236,7 +255,7 @@ func (u *UserHandle) DetailContract(msg *tgbotapi.Message, data interface{}) (st
 		}
 		userID, err = u.ContractDB.UserIDContract(contract)
 		if err != nil {
-			h.MsgForUser(*u.Bot, msg.From.ID, "У пользователя нет заявнеки или она не найдена")
+			h.MsgForUser(*u.Bot, msg.From.ID, "У пользователя нет заявки или она не найдена")
 		}
 
 	} else {

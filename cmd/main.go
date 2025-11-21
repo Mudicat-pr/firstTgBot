@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/Mudicat-pr/firstTgBot/config"
 	"github.com/Mudicat-pr/firstTgBot/internal/handlers"
@@ -15,19 +16,22 @@ import (
 
 func main() {
 	store, err := storage.New("./internal/storage/storage.db")
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("Failed to create new storage", "error", err)
+		os.Exit(1)
 	}
 
 	token := config.MustToken()
 
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.Panic(err)
+		slog.Error("Failed to read bot-token from yaml config", "error", err)
+		os.Exit(1)
 	}
 
-	bot.Debug = true
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	bot.Debug = false
+	slog.Info("Authorized on account %s", "Bot name", bot.Self.UserName)
 
 	fsm := tools.New()
 

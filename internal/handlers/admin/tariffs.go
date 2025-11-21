@@ -3,6 +3,7 @@ package admin
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	h "github.com/Mudicat-pr/firstTgBot/internal/handlers"
@@ -150,12 +151,14 @@ func (a *AdminHandle) chainHelper(msg *tgbotapi.Message, data interface{}, steps
 				h.MsgForUser(*a.Bot, userID, "Ошибка добавления")
 				return 0, nil, err
 			}
+			slog.Info("Added new tariff", "Name", trf.Title, "Admin username", msg.From.UserName)
 			h.MsgForUser(*a.Bot, userID, "Тариф добавлен")
 		case editMode:
 			if err = a.TariffDB.Edit(trf.ID, trf.Title, trf.Body, trf.Price); err != nil {
 				h.MsgForUser(*a.Bot, userID, "Не удалось изменить тариф")
 				return 0, nil, err
 			}
+			slog.Info("Edited tariff", "ID", trf.ID, "New Title", trf.Title, "Admin username", msg.From.UserName)
 			msgBot := fmt.Sprintf("Раньше тариф выглядил так:\nИМЯ - %s\nОПИСАНИЕ - %s\nЦЕНА - %d", trf.Title, trf.Body, trf.Price)
 			h.MsgForUser(*a.Bot, userID, "Тариф успешно изменен\n"+msgBot)
 		}
@@ -170,6 +173,11 @@ func (a *AdminHandle) AddChain(msg *tgbotapi.Message, data interface{}) (state i
 		tools.TariffBody:  {tools.TariffPrice, "Укажите ценник целым числом", fieldBody},
 		tools.TariffPrice: {0, "", fieldPrice},
 	}
+	userState := a.F.UserState(msg.From.ID)
+
+	if cfg, exists := steps[userState]; exists {
+		slog.Info("BOT response", "Message", cfg.Prompt, "State", userState, "NextState", cfg.NextState)
+	}
 	return a.chainHelper(msg, data, steps, addMode)
 }
 
@@ -179,6 +187,11 @@ func (a *AdminHandle) EditChain(msg *tgbotapi.Message, data interface{}) (state 
 		tools.TariffTitleEdit: {tools.TariffBodyEdit, "Введите новое описание тарифа, не более 500 символов", fieldTitle},
 		tools.TariffBodyEdit:  {tools.TariffPriceEdit, "Введите новую стоимость тарифного плана. Целым числом", fieldBody},
 		tools.TariffPriceEdit: {0, "", fieldPrice},
+	}
+	userState := a.F.UserState(msg.From.ID)
+
+	if cfg, exists := steps[userState]; exists {
+		slog.Info("BOT response", "Message", cfg.Prompt, "State", userState, "NextState", cfg.NextState)
 	}
 	return a.chainHelper(msg, data, steps, editMode)
 }
@@ -229,5 +242,6 @@ func (a *AdminHandle) Hide(msg *tgbotapi.Message, data interface{}) (state int, 
 	a.TariffDB.Hide(trf.ID, trf.IsHide)
 	msgBot := fmt.Sprintf("Успех! Тариф сменил статус на: %v", flag)
 	h.MsgForUser(*a.Bot, msg.From.ID, msgBot)
+	slog.Info("The tariff was hidden or revealed", "Tariff", trf.Title, "Admin username", msg.From.UserName)
 	return 0, nil, nil
 }
